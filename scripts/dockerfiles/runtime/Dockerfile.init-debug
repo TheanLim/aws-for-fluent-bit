@@ -2,7 +2,7 @@ ARG RUNTIME_IMAGE
 FROM ${RUNTIME_IMAGE}
 
 # ASan runtime options: increase malloc_context_size for full free/alloc stack traces
-ENV ASAN_OPTIONS="malloc_context_size=30:detect_leaks=0:abort_on_error=1"
+ENV ASAN_OPTIONS="malloc_context_size=30:detect_leaks=0:abort_on_error=1:fast_unwind_on_malloc=0"
 
 # Only last CMD command will be executed, automatically replaces the original entrypoint
 CMD echo "AWS for Fluent Bit Container Image Version `cat /AWS_FOR_FLUENT_BIT_VERSION` - Init Debug Image with S3 Core Uploader"; \
