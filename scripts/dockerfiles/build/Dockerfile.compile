@@ -8,17 +8,26 @@ WORKDIR /tmp/fluent-bit/build/
 ARG RELEASE=On
 # Debug disabled by default
 ARG DEBUG=Off
+# AddressSanitizer disabled by default (requires FLB_JEMALLOC=Off)
+ARG SANITIZE_ADDRESS=Off
 
 # Install valgrind-devel if DEBUG is enabled
 RUN if [ "$DEBUG" = "On" ]; then \
       yum install -y valgrind-devel; \
     fi
 
-# Build Fluent Bit with appropriate compiler flags based on DEBUG and RELEASE arguments
-RUN cmake \
+# Build Fluent Bit with appropriate compiler flags based on DEBUG, RELEASE, and SANITIZE_ADDRESS arguments
+# When SANITIZE_ADDRESS=On, jemalloc must be disabled (ASan provides its own allocator).
+RUN JEMALLOC_SETTING=On; \
+    VALGRIND_SETTING=${DEBUG}; \
+    if [ "$SANITIZE_ADDRESS" = "On" ]; then \
+      JEMALLOC_SETTING=Off; \
+      VALGRIND_SETTING=Off; \
+    fi && \
+    cmake \
     # always on
     -DFLB_SIMD=On \
-    -DFLB_JEMALLOC=On \
+    -DFLB_JEMALLOC=${JEMALLOC_SETTING} \
     -DFLB_TLS=On \
     -DFLB_HTTP_SERVER=On \
     -DFLB_IN_SYSTEMD=On \
@@ -32,10 +41,12 @@ RUN cmake \
     # debug only
     -DFLB_DEBUG=${DEBUG} \
     -DFLB_DEV=${DEBUG} \
-    -DFLB_VALGRIND=${DEBUG} \
+    -DFLB_VALGRIND=${VALGRIND_SETTING} \
     -DFLB_TRACE=${DEBUG} \
     -DFLB_MTRACE=${DEBUG} \
     -DFLB_BACKTRACE=${DEBUG} \
+    # sanitizer
+    -DSANITIZE_ADDRESS=${SANITIZE_ADDRESS} \
     ..
 
 # Compile using all available processors for faster builds
