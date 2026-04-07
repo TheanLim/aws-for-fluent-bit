@@ -10,6 +10,7 @@ RUN dnf upgrade -y && \
         systemd-devel \
         zlib-devel \
         valgrind \
+        libasan \
         libyaml \
         gdb \
         nc \
