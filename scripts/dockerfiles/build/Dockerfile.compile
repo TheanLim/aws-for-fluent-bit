@@ -20,11 +20,14 @@ RUN if [ "$DEBUG" = "On" ]; then \
 # When SANITIZE_ADDRESS=On, jemalloc must be disabled (ASan provides its own allocator).
 RUN JEMALLOC_SETTING=On; \
     VALGRIND_SETTING=${DEBUG}; \
+    EXTRA_C_FLAGS=""; \
     if [ "$SANITIZE_ADDRESS" = "On" ]; then \
       JEMALLOC_SETTING=Off; \
       VALGRIND_SETTING=Off; \
+      EXTRA_C_FLAGS="-fno-omit-frame-pointer -fno-optimize-sibling-calls"; \
     fi && \
     cmake \
+    -DCMAKE_C_FLAGS="$EXTRA_C_FLAGS" \
     # always on
     -DFLB_SIMD=On \
     -DFLB_JEMALLOC=${JEMALLOC_SETTING} \
