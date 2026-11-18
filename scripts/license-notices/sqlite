@@ -1,0 +1,4 @@
+SQLite (Fluent Bit lib/sqlite-amalgamation-*).
+
+The SQLite source code is in the public domain. From the header of sqlite3.h:
+"The author disclaims copyright to this source code."

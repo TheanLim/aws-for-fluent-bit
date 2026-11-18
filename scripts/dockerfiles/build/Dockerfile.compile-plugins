@@ -37,3 +37,9 @@ RUN if [ -n "$CLOUDWATCH_PLUGIN_BRANCH" ];then git fetch --all && git checkout $
 RUN if [ -z "$CLOUDWATCH_PLUGIN_BRANCH" ];then git fetch --all --tags && git checkout tags/$CLOUDWATCH_PLUGIN_TAG -b $CLOUDWATCH_PLUGIN_TAG && git describe --tags;fi
 RUN go mod download || ( go env -w GOPROXY=direct && go mod download )
 RUN make release
+
+# Copy license files of the Go modules built into each plugin
+COPY scripts/collect-licenses.sh /collect-licenses.sh
+RUN /collect-licenses.sh go /kinesis-streams/bin/kinesis.so /licenses/kinesis \
+    && /collect-licenses.sh go /kinesis-firehose/bin/firehose.so /licenses/firehose \
+    && /collect-licenses.sh go /cloudwatch/bin/cloudwatch.so /licenses/cloudwatch

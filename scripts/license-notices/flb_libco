@@ -1,0 +1,3 @@
+libco (Fluent Bit lib/flb_libco).
+
+Author: byuu. License: public domain (stated in the header of lib/flb_libco/libco.h).

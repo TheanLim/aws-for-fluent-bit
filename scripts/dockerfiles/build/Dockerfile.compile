@@ -49,3 +49,8 @@ RUN make -j $(getconf _NPROCESSORS_ONLN)
 
 # Install the compiled binary to the expected location
 RUN install bin/fluent-bit /fluent-bit/bin/
+
+# Copy license files of Fluent Bit and the libraries built into it
+COPY scripts/collect-licenses.sh /tmp/collect-licenses.sh
+COPY scripts/license-notices/ /tmp/license-notices/
+RUN /tmp/collect-licenses.sh c /tmp/fluent-bit /fluent-bit/licenses/fluent-bit /tmp/license-notices

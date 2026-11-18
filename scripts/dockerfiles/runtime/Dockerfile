@@ -38,6 +38,9 @@ COPY --from=plugins /kinesis-streams/THIRD-PARTY \
     /kinesis-streams/LICENSE \
     /fluent-bit/licenses/kinesis/
 
+# Copy license files of the Go modules built into the AWS plugins
+COPY --from=plugins /licenses/ /fluent-bit/licenses/
+
 # Create version information from build argument
 ARG AWS_FOR_FLUENT_BIT_VERSION
 RUN echo ${AWS_FOR_FLUENT_BIT_VERSION} > /AWS_FOR_FLUENT_BIT_VERSION
