@@ -64,8 +64,14 @@ RUN mkdir -p /plugins/windows/licenses/kinesis /plugins/windows/licenses/firehos
 RUN cp /kinesis-streams/bin/*.dll /kinesis-firehose/bin/*.dll /cloudwatch/bin/*.dll /plugins/windows
 
 # Copy licenses
-RUN cp /kinesis-streams/THIRD-PARTY /kinesis-streams/LICENSE /plugins/windows/licenses/kinesis
-RUN cp /kinesis-firehose/THIRD-PARTY /kinesis-firehose/LICENSE /plugins/windows/licenses/firehose
-RUN cp /cloudwatch/THIRD-PARTY /cloudwatch/LICENSE /plugins/windows/licenses/cloudwatch
+RUN cp /kinesis-streams/LICENSE /plugins/windows/licenses/kinesis
+RUN cp /kinesis-firehose/LICENSE /plugins/windows/licenses/firehose
+RUN cp /cloudwatch/LICENSE /plugins/windows/licenses/cloudwatch
+
+# Copy license files of the Go modules built into each plugin
+COPY scripts/collect-licenses.sh /collect-licenses.sh
+RUN /collect-licenses.sh go /kinesis-streams/bin/kinesis.dll /plugins/windows/licenses/kinesis \
+    && /collect-licenses.sh go /kinesis-firehose/bin/firehose.dll /plugins/windows/licenses/firehose \
+    && /collect-licenses.sh go /cloudwatch/bin/cloudwatch.dll /plugins/windows/licenses/cloudwatch
 
 RUN tar -C /plugins/windows -cvf /plugins_windows.tar .

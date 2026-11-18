@@ -274,8 +274,38 @@ Copy-Item -Path "${AWSForFluentBitRootDir}\fluent-bit.conf" -Destination "${Stag
 Copy-Item -Path "${AWSForFluentBitRootDir}\configs\parse-json.conf" -Destination "${StagingDirectory}\configs"
 Copy-Item -Path "${AWSForFluentBitRootDir}\configs\minimize-log-loss.conf" -Destination "${StagingDirectory}\configs"
 
-# Copy license
-Copy-Item -Path "${AWSForFluentBitRootDir}\THIRD-PARTY" -Destination "${StagingDirectory}\licenses\fluent-bit"
+# Copy license files of Fluent Bit, the libraries built into it, and OpenSSL.
+# Same rules as scripts/collect-licenses.sh (used by the Linux build).
+function Copy-LicenseFiles([string]$Source, [string]$Destination)
+{
+    $files = Get-ChildItem -Path $Source -File | Where-Object { $_.Name -match '^(licen[cs]e|copying|copyright|notice)' }
+    if (-not $files) { return $false }
+    New-Item -Path $Destination -ItemType Directory -Force | Out-Null
+    $files | Copy-Item -Destination $Destination
+    return $true
+}
+
+$LicenseDirectory = "${StagingDirectory}\licenses\fluent-bit"
+$NoticesDirectory = "${AWSForFluentBitRootDir}\scripts\license-notices"
+$MissingLicenses = @()
+Copy-LicenseFiles $FluentBitBaseDirectory $LicenseDirectory | Out-Null
+if (-not (Copy-LicenseFiles "${BaseDir}\openssl" "${LicenseDirectory}\openssl")) { $MissingLicenses += "openssl" }
+Get-ChildItem -Path "${FluentBitBaseDirectory}\lib" -Directory | ForEach-Object {
+    # Directory name without its version: c-ares-1.34.6 -> c-ares
+    $name = $_.Name -replace '-amalgamation.*', '' -replace '-[0-9].*', '' -replace '-[0-9a-f]{7,}$', ''
+    $destination = "${LicenseDirectory}\lib\$($_.Name)"
+    if (Copy-LicenseFiles $_.FullName $destination) { return }
+    if (Test-Path "${NoticesDirectory}\${name}") {
+        New-Item -Path $destination -ItemType Directory -Force | Out-Null
+        Copy-Item -Path "${NoticesDirectory}\${name}" -Destination "${destination}\NOTICE"
+        return
+    }
+    $MissingLicenses += "lib\$($_.Name)"
+}
+if ($MissingLicenses.Count -gt 0)
+{
+    throw "No license file for: $($MissingLicenses -join ', ')"
+}
 
 # Compress the folder
 Compress-Archive -Path "${StagingDirectory}\*" -Destination "${AWSForFluentBitRootDir}\build\windows\fluent-bit.zip"

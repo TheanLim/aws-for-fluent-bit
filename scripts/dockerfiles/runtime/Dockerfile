@@ -22,21 +22,10 @@ RUN mkdir -p /fluent-bit/licenses/fluent-bit \
     && mkdir -p /fluent-bit/licenses/cloudwatch \
     && mkdir -p /fluent-bit/licenses/kinesis
 
-# Copy license files for Fluent Bit
-COPY THIRD-PARTY /fluent-bit/licenses/fluent-bit/
-
 # Copy license files for AWS plugins
-COPY --from=plugins /kinesis-firehose/THIRD-PARTY \
-    /kinesis-firehose/LICENSE \
-    /fluent-bit/licenses/firehose/
-
-COPY --from=plugins /cloudwatch/THIRD-PARTY \
-    /cloudwatch/LICENSE \
-    /fluent-bit/licenses/cloudwatch/
-
-COPY --from=plugins /kinesis-streams/THIRD-PARTY \
-    /kinesis-streams/LICENSE \
-    /fluent-bit/licenses/kinesis/
+COPY --from=plugins /kinesis-firehose/LICENSE /fluent-bit/licenses/firehose/
+COPY --from=plugins /cloudwatch/LICENSE /fluent-bit/licenses/cloudwatch/
+COPY --from=plugins /kinesis-streams/LICENSE /fluent-bit/licenses/kinesis/
 
 # Copy license files of the Go modules built into the AWS plugins
 COPY --from=plugins /licenses/ /fluent-bit/licenses/
