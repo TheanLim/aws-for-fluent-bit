@@ -5,7 +5,9 @@ the license files of each component into the image:
   /fluent-bit/licenses/fluent-bit/lib/<lib>/  Libraries built into Fluent Bit
   /fluent-bit/licenses/<plugin>/              AWS Go plugins (cloudwatch, firehose, kinesis)
   /fluent-bit/licenses/<plugin>/<module>/     Go modules built into each plugin
+  /fluent-bit/licenses/THIRD-PARTY            All of the above joined into one file
 
-On Windows images the same layout is under C:\fluent-bit\licenses.
+On Windows images the same directory layout is under C:\fluent-bit\licenses
+(without the joined THIRD-PARTY file).
 
 See scripts/collect-licenses.sh and scripts/license-notices/.

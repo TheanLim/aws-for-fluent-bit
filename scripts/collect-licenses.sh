@@ -24,6 +24,9 @@
 #       Reads the Go modules built into the plugin and copies the license files
 #       of each module into <dest dir>/<module path>/.
 #
+#   collect-licenses.sh notices <licenses dir>
+#       Joins all license files under <licenses dir> into <licenses dir>/THIRD-PARTY.
+#
 # Exits 1 if a component has no license file, so the build fails.
 
 set -euo pipefail
@@ -78,8 +81,30 @@ collect_go() {
     return $(( missing > 0 ))
 }
 
+# Writes <licenses dir>/THIRD-PARTY: every license file under <licenses dir>,
+# each under a header that names its component (the file's directory).
+collect_notices() {
+    local dir="$1" out="$1/THIRD-PARTY" f component files
+    shopt -s globstar
+    shopt -u nocaseglob
+    files=("$dir"/**/*)
+    {
+        echo "Third-party software in this image and its license files."
+        echo "The same files are in the directories next to this file."
+        for f in "${files[@]}"; do
+            [ -f "$f" ] && [ "$f" != "$out" ] || continue
+            component="${f#"$dir"/}"
+            component="${component%/*}"
+            printf '\n%s\n** %s (%s)\n%s\n\n' "$(printf '=%.0s' {1..80})" "$component" "$(basename "$f")" "$(printf '=%.0s' {1..80})"
+            cat "$f"
+        done
+    } > "$out.tmp"
+    mv "$out.tmp" "$out"
+}
+
 case "${1:-}" in
-    c)  collect_c "$2" "$3" "$4" ;;
-    go) collect_go "$2" "$3" ;;
-    *)  echo "usage: $0 c <src> <dest> <extra notices dir> | go <plugin .so> <dest>" >&2; exit 2 ;;
+    c)       collect_c "$2" "$3" "$4" ;;
+    go)      collect_go "$2" "$3" ;;
+    notices) collect_notices "$2" ;;
+    *)       echo "usage: $0 c <src> <dest> <extra notices dir> | go <plugin .so> <dest> | notices <licenses dir>" >&2; exit 2 ;;
 esac

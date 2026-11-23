@@ -18,6 +18,7 @@
 #                /fluent-bit/licenses/fluent-bit/lib/<dir>/.
 #   Go modules:  read from the build info of each plugin .so; each needs
 #                /fluent-bit/licenses/<plugin>/<module path>/.
+#   Each component also needs a section in /fluent-bit/licenses/THIRD-PARTY.
 # Usage: check-image-licenses.sh <image>. Exits 1 if a component has no license files.
 
 set -euo pipefail
@@ -38,8 +39,20 @@ if [ -z "$libs" ]; then
     exit 1
 fi
 echo "Libraries built into fluent-bit: $(wc -w <<< "$libs")"
+notices="$licenses/THIRD-PARTY"
+if [ ! -s "$notices" ]; then
+    echo "ERROR: $notices is missing or empty" >&2
+    missing=$((missing + 1))
+    notices=/dev/null
+fi
+
+# in_notices <component>: the joined notices file has a section for it.
+in_notices() {
+    grep -qF "** $1 (" "$notices"
+}
+
 for dir in $libs; do
-    if [ -z "$(ls -A "$licenses/fluent-bit/lib/$dir" 2> /dev/null)" ]; then
+    if [ -z "$(ls -A "$licenses/fluent-bit/lib/$dir" 2> /dev/null)" ] || ! in_notices "fluent-bit/lib/$dir"; then
         echo "ERROR: no license files for lib/$dir" >&2
         missing=$((missing + 1))
     fi
@@ -49,7 +62,7 @@ for plugin in cloudwatch firehose kinesis; do
     modules="$(go version -m "$work/fluent-bit/$plugin.so" | awk '$1 == "dep" {print $2}')"
     echo "Go modules built into $plugin.so: $(wc -w <<< "$modules")"
     for module in $modules; do
-        if [ ! -d "$licenses/$plugin/$module" ]; then
+        if [ ! -d "$licenses/$plugin/$module" ] || ! in_notices "$plugin/$module"; then
             echo "ERROR: no license files for $plugin Go module $module" >&2
             missing=$((missing + 1))
         fi

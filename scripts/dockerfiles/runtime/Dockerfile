@@ -30,6 +30,10 @@ COPY --from=plugins /kinesis-streams/LICENSE /fluent-bit/licenses/kinesis/
 # Copy license files of the Go modules built into the AWS plugins
 COPY --from=plugins /licenses/ /fluent-bit/licenses/
 
+# Join all license files into one notices file, /fluent-bit/licenses/THIRD-PARTY
+COPY scripts/collect-licenses.sh /tmp/collect-licenses.sh
+RUN /tmp/collect-licenses.sh notices /fluent-bit/licenses && rm /tmp/collect-licenses.sh
+
 # Create version information from build argument
 ARG AWS_FOR_FLUENT_BIT_VERSION
 RUN echo ${AWS_FOR_FLUENT_BIT_VERSION} > /AWS_FOR_FLUENT_BIT_VERSION
